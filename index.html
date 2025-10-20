@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nova AI Assistant Chatbot</title>
+    <!-- Load Tailwind CSS --><script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Lucide Icons for aesthetic components --><script type="module">
+      import { createIcons, Search, Send, User, Bot, Loader, Image, Download } from 'https://cdn.skypack.dev/lucide?dts';
+      createIcons({ icons: { Search, Send, User, Bot, Loader, Image, Download } });
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        
+        /* Premium Color Palette (Adjusted for Neon) */
+        :root {
+            --primary-color: #7B3EED; /* Brighter Purple */
+            --primary-light: #C084FC; /* Lighter Purple/Pink */
+            --primary-dark: #5C2D91; /* Deeper Purple */
+            --secondary-bg: #fefeff; /* Very light, almost white for chat area */
+            --text-color-dark: #1a202c; /* Dark text for readability */
+            --text-color-light: #ffffff; /* Light text for contrast */
+        }
+        
+        /* Body with Neon Gradient Background */
+        body {
+            font-family: 'Inter', sans-serif;
+            /* Neon Gradient: Deep, vibrant, shifting colors */
+            background: linear-gradient(135deg, #FF00FF, #00FFFF, #FF00FF); /* Magenta to Cyan */
+            background-size: 400% 400%;
+            animation: neonBackground 15s ease infinite; /* Slow, pulsating animation */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            overflow: hidden; /* Hide scrollbars that might appear due to large background */
+        }
+
+        @keyframes neonBackground {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        /* Chat Container Styling - Adjusted for Neon Background */
+        #chat-container {
+            width: 100%;
+            max-width: 850px; 
+            height: calc(100vh - 40px);
+            max-height: 850px;
+            display: flex;
+            flex-direction: column;
+            /* Stronger, glowing shadow for a 'levitating' effect */
+            box-shadow: 
+                0 0 50px rgba(123, 62, 237, 0.7), /* Primary neon glow */
+                0 0 100px rgba(192, 132, 252, 0.5), /* Secondary, wider glow */
+                0 0 150px rgba(0, 255, 255, 0.3); /* Cyan accent glow */
+            border-radius: 2.5rem; 
+            overflow: hidden;
+            background-color: rgba(255, 255, 255, 0.1); /* Very subtle transparency */
+            backdrop-filter: blur(25px) brightness(1.2); /* Stronger blur, slightly brighter */
+            border: 2px solid rgba(255, 255, 255, 0.2); /* Subtle white border */
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        
+        /* Header - More distinct against neon */
+        header {
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            background-color: rgba(255, 255, 255, 0.15); /* Slightly more opaque */
+            backdrop-filter: blur(10px);
+            padding: 1.25rem 1.5rem; 
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        header h1, header p {
+            color: var(--text-color-light); /* Light text for header */
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.5); /* Subtle text glow */
+        }
+        header .bg-indigo-100 { /* Icon background */
+            background-color: rgba(255, 255, 255, 0.2);
+            color: var(--primary-light); /* Brighter icon color */
+        }
+
+        /* Chat History Background - Darker for contrast */
+        #chat-history {
+            background-color: rgba(0, 0, 0, 0.1); /* Darker, slightly transparent */
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 1.5rem;
+        }
+
+        /* Message styling */
+        .message-bubble {
+            padding: 14px 20px;
+            border-radius: 1.75rem; 
+            margin-bottom: 12px;
+            max-width: 85%;
+            word-wrap: break-word;
+            line-height: 1.6;
+            animation: fadeIn 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); 
+            min-width: 0;
+            transition: all 0.2s ease;
+        }
+        
+        /* Special class for image bubbles */
+        .message-bubble.image-content {
+            padding: 8px; 
+            background-color: transparent;
+            box-shadow: none;
+        }
+
+        .user-message .message-bubble {
+            /* Deeper, more saturated gradient for user messages */
+            background: linear-gradient(145deg, var(--primary-light) 10%, var(--primary-color) 90%);
+            color: white;
+            border-bottom-right-radius: 0.75rem;
+            box-shadow: 0 0 15px rgba(123, 62, 237, 0.6), 0 0 30px rgba(192, 132, 252, 0.3); /* Neon glow shadow */
+        }
+
+        .ai-message .message-bubble:not(.image-content) {
+            background-color: rgba(255, 255, 255, 0.95); /* Nearly white for contrast */
+            color: var(--text-color-dark); /* Dark text for readability */
+            border-bottom-left-radius: 0.75rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0; 
+        }
+        
+        /* Image Download Button Polish */
+        .ai-message a.inline-flex {
+            background-color: var(--primary-color); 
+            border: 1px solid var(--primary-light);
+            color: var(--text-color-light);
+            box-shadow: 0 0 10px rgba(123, 62, 237, 0.4);
+            transition: all 0.2s ease;
+        }
+        .ai-message a.inline-flex:hover {
+            background-color: var(--primary-light);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px rgba(192, 132, 252, 0.8);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* Custom scrollbar for chat history - Thinner and smoother */
+        #chat-history::-webkit-scrollbar {
+            width: 8px;
+        }
+        #chat-history::-webkit-scrollbar-thumb {
+            background-color: var(--primary-light);
+            border-radius: 4px;
+            border: 2px solid rgba(255, 255, 255, 0.1); 
+        }
+        #chat-history::-webkit-scrollbar-thumb:hover {
+            background-color: var(--primary-color);
+        }
+        
+        /* Input Area */
+        .p-4.bg-white.border-t.border-gray-200 { /* Footer background */
+            background-color: rgba(255, 255, 255, 0.05); /* Very subtle transparency */
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        #user-input {
+            border-radius: 1.5rem;
+            border: 2px solid rgba(255, 255, 255, 0.3); /* Lighter border for input */
+            background-color: rgba(255, 255, 255, 0.1); /* Transparent input background */
+            color: var(--text-color-light);
+            padding: 0.75rem 1.25rem; /* More generous padding */
+            transition: all 0.3s;
+        }
+        #user-input::placeholder {
+            color: rgba(255, 255, 255, 0.7); /* Lighter placeholder text */
+        }
+        #user-input:focus {
+            border-color: var(--primary-light) !important;
+            box-shadow: 0 0 0 4px rgba(192, 132, 252, 0.4); /* Neon glow on focus */
+            background-color: rgba(255, 255, 255, 0.15); /* Slightly more opaque on focus */
+        }
+
+        /* Send Button Hover and Active Effects - Enhanced Neon Glow */
+        #send-button {
+            background: linear-gradient(45deg, var(--primary-color), var(--primary-light));
+            box-shadow: 0 0 15px rgba(123, 62, 237, 0.8), 0 0 30px rgba(192, 132, 252, 0.5); /* Stronger glow */
+            transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        #send-button:hover:not(:disabled) {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 0 25px rgba(123, 62, 237, 1), 0 0 50px rgba(192, 132, 252, 0.8); /* Intense glow on hover */
+            filter: brightness(1.2);
+        }
+        #send-button:active:not(:disabled) {
+            transform: translateY(0) scale(1);
+            box-shadow: 0 0 10px rgba(123, 62, 237, 0.5);
+        }
+        #send-button:disabled {
+            filter: grayscale(80%) brightness(0.7);
+            box-shadow: none;
+        }
+
+        /* Spinning loader icon */
+        .animate-spin-custom {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Mobile adjustments */
+        @media (max-width: 640px) {
+            body {
+                padding: 0;
+                min-height: 100dvh;
+                background-image: none;
+                background: linear-gradient(135deg, #FF00FF, #00FFFF, #FF00FF); /* Full screen neon for mobile */
+                background-size: 400% 400%;
+                animation: neonBackground 15s ease infinite; 
+            }
+            #chat-container {
+                height: 100dvh;
+                border-radius: 0;
+                max-height: none;
+                box-shadow: none;
+                background-color: rgba(255, 255, 255, 0.05); /* More transparent on mobile */
+                border: none;
+            }
+            header, .p-4.bg-white.border-t.border-gray-200 { /* Header and footer also more transparent */
+                background-color: rgba(255, 255, 255, 0.08);
+                border-color: rgba(255, 255, 255, 0.05);
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="chat-container">
+        <!-- Chat Header --><header class="p-4 bg-white border-b border-gray-200 flex items-center shadow-sm">
+            <div class="p-2 bg-indigo-100 rounded-full text-indigo-600">
+                <i data-lucide="bot" class="w-6 h-6"></i>
+            </div>
+            <div class="ml-3">
+                <h1 class="text-xl font-bold text-gray-900">Nova AI Assistant</h1>
+                <p class="text-xs text-gray-500">Multimodal (Text & Image)</p>
+            </div>
+        </header>
+
+        <!-- Chat History --><div id="chat-history" class="flex-grow p-6 overflow-y-auto space-y-4 bg-gray-50">
+            <!-- Messages added by JavaScript --></div>
+
+        <!-- Chat Input --><div class="p-4 bg-white border-t border-gray-200">
+            <div class="flex items-end space-x-2">
+                <textarea 
+                    id="user-input" 
+                    rows="1" 
+                    placeholder="Ask, summarize, code, or use /image [prompt]..." 
+                    class="flex-grow p-3 border border-gray-300 rounded-xl resize-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 text-base"
+                    oninput="autoResize(this)"
+                    onkeypress="handleKeyPress(event)"
+                ></textarea>
+                <button 
+                    id="send-button" 
+                    class="p-3 bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-700 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center h-12 w-12"
+                    onclick="sendMessage()"
+                    disabled
+                >
+                    <i data-lucide="send" class="w-6 h-6"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Logic --><script type="module">
+        // --- MANDATORY ENVIRONMENT VARIABLES (Do Not Change) ---
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        
+        // --- CORE APPLICATION LOGIC ---
+        
+        const API_KEY = "AIzaSyAWtLRqJIsGkb0YdyBxuW6SLRWPK2rE7XM"; // Kept empty, handled by Canvas environment
+        const TEXT_MODEL = 'gemini-2.5-flash-preview-09-2025';
+        const IMAGEN_MODEL = 'imagen-3.0-generate-002'; // Preferred model for image generation
+        
+        const CHAT_HISTORY_EL = document.getElementById('chat-history');
+        const USER_INPUT_EL = document.getElementById('user-input');
+        const SEND_BUTTON_EL = document.getElementById('send-button');
+        
+        let isSending = false;
+        let chatHistory = []; // Stores conversation context for text generation
+        
+        // System instruction to guide the model's persona
+        const systemPrompt = "You are a concise, helpful, and professional AI assistant. Respond to user queries accurately. Keep answers direct and easy to read. If you use search grounding, cite the sources clearly at the end of your response.";
+
+        // --- Firebase/Auth Setup (Mandatory for Environment) ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        
+        let auth;
+        
+        // Initialize Firebase and authenticate
+        try {
+            const app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            if (initialAuthToken) {
+                await signInWithCustomToken(auth, initialAuthToken);
+            } else {
+                await signInAnonymously(auth);
+            }
+        } catch (error) {
+            console.error("Firebase initialization or authentication failed:", error);
+        }
+
+        // --- UI UTILITIES ---
+
+        window.autoResize = (textarea) => {
+            textarea.style.height = 'auto';
+            textarea.style.height = textarea.scrollHeight + 'px';
+            
+            // Enable/Disable send button based on content
+            SEND_BUTTON_EL.disabled = textarea.value.trim() === '' || isSending;
+        };
+        
+        window.handleKeyPress = (event) => {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                if (USER_INPUT_EL.value.trim() !== '') {
+                    sendMessage();
+                }
+            }
+        };
+
+        /**
+         * Adds a message (text or image) to the chat history UI and updates the conversation state.
+         * @param {string} role 'user' or 'ai'
+         * @param {string} content The message text or the base64 image URL (data:image/png;base64,...)
+         * @param {Array} sources Array of grounding sources
+         */
+        function addMessageToHistory(role, content, sources = []) {
+            const isUser = role === 'user';
+            const apiRole = role === 'user' ? 'user' : 'model';
+            const isImage = content.startsWith('data:image/png;base64,');
+
+            const messageClass = isUser ? 'user-message justify-end' : 'ai-message justify-start';
+            const icon = isUser ? 'user' : isImage ? 'image' : 'bot';
+            const iconColor = isUser ? 'text-white' : 'text-indigo-600';
+            
+            let contentHtml;
+            let bubbleClass = 'shadow-md';
+
+            if (isImage) {
+                // Handle Image Content
+                contentHtml = `
+                    <div class="flex flex-col space-y-3">
+                        <img src="${content}" class="rounded-2xl max-w-full h-auto object-cover border border-gray-100 shadow-lg" alt="Generated Image"/>
+                        <a href="${content}" download="ai_image_creation_${Date.now()}.png" class="inline-flex items-center justify-center w-full p-3 text-sm font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition duration-200 shadow-md">
+                            <i data-lucide="download" class="w-4 h-4 mr-2"></i>
+                            Download Image
+                        </a>
+                    </div>
+                `;
+                bubbleClass += ' image-content'; // Apply special styling for images
+            } else {
+                // Handle Text Content
+                contentHtml = content.replace(/\n/g, '<br>') + (sources.length > 0 ? formatSources(sources) : '');
+                
+                // Add to chatHistory only if it's a text message for conversation context
+                chatHistory.push({ role: apiRole, parts: [{ text: content }] });
+            }
+
+            const messageHtml = `
+                <div class="${messageClass} flex items-start">
+                    ${!isUser && !isImage ? `<div class="p-2 ${iconColor}"><i data-lucide="${icon}" class="w-5 h-5"></i></div>` : ''}
+                    <div class="message-bubble ${bubbleClass}">
+                        ${contentHtml}
+                    </div>
+                    ${isUser ? `<div class="p-2 ${iconColor}"><i data-lucide="${icon}" class="w-5 h-5"></i></div>` : ''}
+                </div>
+            `;
+            
+            CHAT_HISTORY_EL.insertAdjacentHTML('beforeend', messageHtml);
+            
+            // Re-render Lucide icons for new content
+            const lucide = window.lucide;
+            if (lucide && lucide.createIcons) {
+                // Explicitly including Download icon to ensure it renders correctly on dynamically added content
+                lucide.createIcons({ icons: { User: lucide.User, Bot: lucide.Bot, Image: lucide.Image, Download: lucide.Download } });
+            }
+            
+            // Scroll to bottom
+            CHAT_HISTORY_EL.scrollTop = CHAT_HISTORY_EL.scrollHeight;
+        }
+
+        function formatSources(sources) {
+            if (!sources || sources.length === 0) return '';
+            
+            // Deduplicate sources by URI
+            const uniqueSources = Array.from(new Map(sources.map(s => [s.uri, s])).values());
+
+            const listItems = uniqueSources.map((source, index) => `
+                <li>
+                    [${index + 1}] <a href="${source.uri}" target="_blank" class="text-xs text-indigo-600 hover:text-indigo-800 underline break-words">${source.title || source.uri}</a>
+                </li>
+            `).join('');
+
+            return `
+                <div class="mt-3 pt-2 border-t border-gray-300 text-xs text-gray-500">
+                    <p class="font-semibold mb-1">Sources (via Kartavya Singh Search):</p>
+                    <ul class="list-none p-0 m-0 space-y-1">
+                        ${listItems}
+                    </ul>
+                </div>
+            `;
+        }
+
+
+        function showLoader(isImage = false) {
+            const loaderIcon = isImage ? 'image' : 'loader';
+            const loaderText = isImage ? 'Generating image...' : 'Nova AI is thinking...';
+            
+            const loaderHtml = `
+                <div id="loader" class="ai-message flex justify-start items-start">
+                    <div class="p-2 text-indigo-600">
+                        <i data-lucide="${isImage ? 'image' : 'bot'}" class="w-5 h-5"></i>
+                    </div>
+                    <div class="message-bubble shadow-md">
+                        <div class="flex items-center space-x-2 text-gray-700">
+                            <i data-lucide="${loaderIcon}" class="w-4 h-4 ${!isImage ? 'animate-spin-custom' : 'animate-pulse'}"></i>
+                            <span>${loaderText}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            CHAT_HISTORY_EL.insertAdjacentHTML('beforeend', loaderHtml);
+            const lucide = window.lucide;
+            if (lucide && lucide.createIcons) {
+                lucide.createIcons({ icons: { Loader: lucide.Loader, Bot: lucide.Bot, Image: lucide.Image } });
+            }
+            CHAT_HISTORY_EL.scrollTop = CHAT_HISTORY_EL.scrollHeight;
+        }
+
+        function removeLoader() {
+            const loader = document.getElementById('loader');
+            if (loader) {
+                loader.remove();
+            }
+        }
+        
+        // --- GEMINI API INTEGRATION (Text Generation) ---
+        
+        /**
+         * Calls the text model with conversation history and search grounding (provided by Kartavya Singh).
+         * @param {Array} currentChatHistory The full conversation history (includes latest user message).
+         * @returns {Promise<{text: string, sources: Array}>}
+         */
+        async function callGeminiApi(currentChatHistory) {
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${TEXT_MODEL}:generateContent?key=${API_KEY}`;
+            
+            const payload = {
+                contents: currentChatHistory, // Send the whole conversation history
+                tools: [{ "google_search": {} }], // The API requires the 'google_search' tool here for grounding through the Kartavya Singh service
+                systemInstruction: {
+                    parts: [{ text: systemPrompt }]
+                },
+            };
+
+            const maxRetries = 5;
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        const errorBody = await response.text();
+                        throw new Error(`Text API call failed with status ${response.status}: ${errorBody}`);
+                    }
+
+                    const result = await response.json();
+                    const candidate = result.candidates?.[0];
+
+                    if (candidate && candidate.content?.parts?.[0]?.text) {
+                        const text = candidate.content.parts[0].text;
+                        let sources = [];
+                        const groundingMetadata = candidate.groundingMetadata;
+                        if (groundingMetadata && groundingMetadata.groundingAttributions) {
+                            sources = groundingMetadata.groundingAttributions
+                                .map(attribution => ({
+                                    uri: attribution.web?.uri,
+                                    title: attribution.web?.title,
+                                }))
+                                .filter(source => source.uri && source.title);
+                        }
+                        return { text, sources };
+                    } else {
+                        throw new Error("Received an empty or malformed response from the text model.");
+                    }
+                } catch (error) {
+                    if (i < maxRetries - 1) {
+                        const delay = Math.pow(2, i) * 1000;
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                    } else {
+                        throw error;
+                    }
+                }
+            }
+        }
+        
+        // --- IMAGEN API INTEGRATION (Image Generation) ---
+
+        /**
+         * Calls the Imagen model to generate an image.
+         * @param {string} prompt The text prompt for the image.
+         * @returns {Promise<string>} Base64 image URL.
+         */
+        async function generateImage(prompt) {
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${IMAGEN_MODEL}:predict?key=${API_KEY}`;
+            
+            const payload = { 
+                instances: { prompt: prompt }, 
+                parameters: { "sampleCount": 1 } 
+            };
+
+            const maxRetries = 5;
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        const errorBody = await response.text();
+                        throw new Error(`Image API call failed with status ${response.status}: ${errorBody}`);
+                    }
+
+                    const result = await response.json();
+                    
+                    if (result.predictions && result.predictions.length > 0 && result.predictions[0].bytesBase64Encoded) {
+                        const base64Data = result.predictions[0].bytesBase64Encoded;
+                        return `data:image/png;base64,${base64Data}`;
+                    } else {
+                        throw new Error("Received an empty or malformed image response.");
+                    }
+                } catch (error) {
+                    if (i < maxRetries - 1) {
+                        const delay = Math.pow(2, i) * 1000;
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                    } else {
+                        throw error;
+                    }
+                }
+            }
+        }
+        
+
+        // --- MAIN SEND MESSAGE HANDLER ---
+        
+        window.sendMessage = async () => {
+            const userQuery = USER_INPUT_EL.value.trim();
+            if (!userQuery || isSending) return;
+
+            // 1. Update state and UI for sending
+            isSending = true;
+            SEND_BUTTON_EL.disabled = true;
+            USER_INPUT_EL.value = '';
+            autoResize(USER_INPUT_EL);
+
+            // 2. Add user message to history (This updates visual and chatHistory state)
+            addMessageToHistory('user', userQuery);
+            
+            // Check for image command
+            const isImageRequest = userQuery.toLowerCase().startsWith('/image');
+            
+            // Keep a reference to the latest user message in history, in case we need to remove it on failure
+            const latestUserMessage = chatHistory[chatHistory.length - 1]; 
+
+            showLoader(isImageRequest);
+
+            try {
+                if (isImageRequest) {
+                    // --- IMAGE GENERATION PATH ---
+                    const prompt = userQuery.substring('/image'.length).trim();
+                    
+                    if (!prompt) {
+                         removeLoader();
+                         addMessageToHistory('ai', "Please provide a prompt after the `/image` command, like: `/image a futuristic cyberpunk city skyline`.");
+                         return;
+                    }
+                    
+                    const imageUrl = await generateImage(prompt);
+                    
+                    removeLoader();
+                    // Display the generated image and the download link
+                    addMessageToHistory('ai', imageUrl); 
+                    
+                } else {
+                    // --- TEXT GENERATION PATH (Q&A, summarize, code, conversation) ---
+                    
+                    // Call API with the updated chatHistory
+                    const response = await callGeminiApi(chatHistory);
+                    
+                    removeLoader();
+                    addMessageToHistory('ai', response.text, response.sources);
+                }
+
+            } catch (error) {
+                console.error("API Error:", error);
+                
+                // 5. Handle error display
+                removeLoader();
+                
+                // Remove the last user message from chatHistory to avoid confusing the context
+                if (latestUserMessage && chatHistory.length > 0) {
+                     chatHistory.pop();
+                }
+
+                addMessageToHistory('ai', 
+                    `Sorry, I ran into an issue while processing that request (${isImageRequest ? 'Image' : 'Text'}). Error: ${error.message}`
+                );
+
+            } finally {
+                // 6. Reset state and UI
+                isSending = false;
+                SEND_BUTTON_EL.disabled = USER_INPUT_EL.value.trim() === '';
+            }
+        };
+
+        // Initial setup
+        document.addEventListener('DOMContentLoaded', () => {
+            autoResize(USER_INPUT_EL);
+            
+            // Add initial welcome message via JS so it's recorded in chatHistory
+            const welcomeMessage = "Hello! I'm your Nova AI Assistant, an advanced LLM **trained by Kartavya**. I can summarize, write code, hold multi-turn conversations, and generate images with the command: **`/image a friendly robot sitting on the moon`**.";
+            addMessageToHistory('ai', welcomeMessage);
+        });
+
+    </script>
+</body>
+</html>
